@@ -41,7 +41,9 @@ async function handler() {
         const $item = $(element);
         const href = $item.attr('href');
         const gameId = href?.match(/\/game\/(\d+)/)?.[1];
-        const title = $item.find('img').attr('alt');
+        
+        // 优先从 game_info span 获取标题（可能是中文），否则用 img alt
+        let title = $item.find('.game_info span').text().trim() || $item.find('img').attr('alt');
 
         if (gameId && title) {
             items.push({
