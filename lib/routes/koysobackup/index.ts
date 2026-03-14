@@ -48,7 +48,7 @@ async function handler() {
 
         // 获取封面图片
         const coverImg = $item.find('img').attr('src') || $item.find('img').attr('data-src');
-        const coverUrl = coverImg ? `https://shared.cdn.queniuqe.com${new URL(coverImg).pathname}` : '';
+        const coverUrl = coverImg ? `https://pxy.real9.cn/shared.cdn.queniuqe.com${new URL(coverImg).pathname}` : '';
 
         if (gameId && title) {
             items.push({
