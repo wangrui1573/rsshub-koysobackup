@@ -27,7 +27,8 @@ export const route: Route = {
 };
 
 async function handler() {
-    const url = 'https://koysobackup.com/?sort=latest';
+    // 使用 l=schinese 参数获取中文标题
+    const url = 'https://koysobackup.com/?sort=latest&l=schinese';
 
     const response = await got({
         method: 'get',
