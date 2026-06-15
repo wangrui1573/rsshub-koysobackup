@@ -141,7 +141,26 @@ async function handler(ctx: any) {
     const category = ctx.req.param('category') || 'latest';
     const config = categoryMap[category] || categoryMap.latest;
 
+    // gamer520.com 在 Vercel 等数据中心 IP 上会触发 403 (Cloudflare/WAF)
+    // 使用两次请求 + cookie 绕过：先拿 set-cookie，再带 cookie 获取内容
+    let cookieStr = '';
+
+    try {
+        await ofetch.raw(config.url, {
+            onResponse({ response }) {
+                const setCookieHeaders = response.headers.getSetCookie?.() || [];
+                cookieStr = setCookieHeaders.map((c: string) => c.split(';')[0].trim()).join('; ');
+            },
+            onError() {
+                // 首次请求可能 403，忽略错误并从响应头获取 cookie
+            },
+        });
+    } catch {
+        // 忽略首次请求异常
+    }
+
     const html = await ofetch(config.url, {
+        headers: cookieStr ? { Cookie: cookieStr } : undefined,
         parseResponse: (text) => text,
     });
 
