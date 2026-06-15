@@ -1,6 +1,7 @@
 import { load } from 'cheerio';
+
 import type { Route } from '@/types';
-import puppeteer from '@/utils/puppeteer';
+import ofetch from '@/utils/ofetch';
 
 export const route: Route = {
     path: '/:category?',
@@ -32,7 +33,7 @@ export const route: Route = {
     },
     features: {
         requireConfig: false,
-        requirePuppeteer: true,
+        requirePuppeteer: false,
         antiCrawler: false,
         supportBT: false,
         supportPodcast: false,
@@ -85,23 +86,34 @@ const categoryMap: Record<string, { url: string; title: string; description: str
 };
 
 async function handler(ctx: any) {
-    const category = ctx.params.category || 'latest';
+    const category = ctx.req.param('category') || 'latest';
     const config = categoryMap[category] || categoryMap.latest;
 
-    // 2468c.com 是 SPA 站点，有反爬保护（403），必须使用 puppeteer 渲染
-    const browser = await puppeteer();
-    const page = await browser.newPage();
-    await page.setRequestInterception(true);
-    page.on('request', (request) => {
-        request.resourceType() === 'document' || request.resourceType() === 'script' || request.resourceType() === 'xhr' ? request.continue() : request.abort();
-    });
-    await page.goto(config.url, {
-        waitUntil: 'domcontentloaded',
-    });
-    const response = await page.evaluate(() => document.documentElement.innerHTML);
-    await browser.close();
+    // 2468c.com 有 JS 挑战防护：首次请求返回 403 + set-cookie，
+    // 携带 cookie 再次请求才能获取真实 HTML 内容
+    let cookieStr = '';
 
-    const $ = load(response);
+    try {
+        await ofetch.raw(config.url, {
+            onResponse({ response }) {
+                const setCookieHeaders = response.headers.getSetCookie?.() || [];
+                cookieStr = setCookieHeaders.map((c: string) => c.split(';')[0]).join('; ');
+            },
+            onError() {
+                // 首次请求 403 是预期的，忽略错误
+            },
+        });
+    } catch {
+        // 首次请求失败是正常的（403 + JS 挑战）
+    }
+
+    // 携带 cookie 再次请求，获取真实页面
+    const response = await ofetch(config.url, {
+        headers: cookieStr ? { Cookie: cookieStr } : undefined,
+        parseResponse: (text) => text,
+    });
+
+    const $ = load(response as string);
     const items: any[] = [];
 
     $('article').each((_, element) => {
@@ -126,9 +138,7 @@ async function handler(ctx: any) {
                 link,
                 guid: link,
                 pubDate,
-                description: coverUrl
-                    ? `<img src="${coverUrl}" alt="${title.replace(/"/g, '&quot;')}" style="max-width:300px"/>`
-                    : '',
+                description: coverUrl ? `<img src="${coverUrl}" alt="${title.replaceAll(/"/g, '&quot;')}" style="max-width:300px"/>` : '',
             });
         }
     });
