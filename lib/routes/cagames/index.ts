@@ -1,4 +1,5 @@
 import type { Route } from '@/types';
+import { PRESETS } from '@/utils/header-generator';
 import ofetch from '@/utils/ofetch';
 import { parseDate } from '@/utils/parse-date';
 
@@ -32,7 +33,7 @@ export const route: Route = {
     features: {
         requireConfig: false,
         requirePuppeteer: false,
-        antiCrawler: false,
+        antiCrawler: true,
         supportBT: false,
         supportPodcast: false,
         supportSciHub: false,
@@ -58,10 +59,13 @@ async function handler(ctx: any) {
 
     const apiUrl = cat.id > 0 ? `${BASE_URL}/api/games?category_id=${cat.id}&sort=created_at&page=1&limit=30` : `${BASE_URL}/api/games?sort=created_at&page=1&limit=30`;
 
+    // headerGeneratorOptions 让 ofetch 模拟真实浏览器请求头 (User-Agent/Accept/Sec-* 等)
+    // 无此配置时 ofetch 默认 UA 为 node-fetch,会被 Cloudflare WAF 拦截返回 403
     const response = await ofetch<{ data: any[]; meta: { total: string; page: number; limit: number } }>(apiUrl, {
         headers: {
             Accept: 'application/json',
         },
+        headerGeneratorOptions: PRESETS.MODERN_WINDOWS_CHROME,
     });
 
     const items = (response.data || []).map((g: any) => {
