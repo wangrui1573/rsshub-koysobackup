@@ -1,9 +1,9 @@
 import type { Route } from '@/types';
-import { PRESETS } from '@/utils/header-generator';
 import ofetch from '@/utils/ofetch';
 import { parseDate } from '@/utils/parse-date';
 
 const BASE_URL = 'https://www.cagames.top';
+const PROXY_PREFIX = 'https://pxy3.real9.cn';
 
 const categoryMap: Record<string, { id: number; name: string }> = {
     all: { id: 0, name: '全部游戏' },
@@ -57,15 +57,13 @@ async function handler(ctx: any) {
     const category = ctx.req.param('category') || 'all';
     const cat = categoryMap[category] || categoryMap.all;
 
-    const apiUrl = cat.id > 0 ? `${BASE_URL}/api/games?category_id=${cat.id}&sort=created_at&page=1&limit=30` : `${BASE_URL}/api/games?sort=created_at&page=1&limit=30`;
+    const apiPath = cat.id > 0 ? `/api/games?category_id=${cat.id}&sort=created_at&page=1&limit=30` : `/api/games?sort=created_at&page=1&limit=30`;
 
-    // headerGeneratorOptions 让 ofetch 模拟真实浏览器请求头 (User-Agent/Accept/Sec-* 等)
-    // 无此配置时 ofetch 默认 UA 为 node-fetch,会被 Cloudflare WAF 拦截返回 403
-    const response = await ofetch<{ data: any[]; meta: { total: string; page: number; limit: number } }>(apiUrl, {
+    // 通过 pxy3.real9.cn 代理访问，绕过 cagames.top 对 non-China IP 的 Cloudflare WAF 封锁
+    const response = await ofetch<{ data: any[]; meta: { total: string; page: number; limit: number } }>(`${PROXY_PREFIX}/${BASE_URL.replace('https://', '')}${apiPath}`, {
         headers: {
             Accept: 'application/json',
         },
-        headerGeneratorOptions: PRESETS.MODERN_WINDOWS_CHROME,
     });
 
     const items = (response.data || []).map((g: any) => {

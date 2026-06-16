@@ -96,42 +96,42 @@ export const route: Route = {
 
 const categoryMap: Record<string, { url: string; title: string; description: string }> = {
     latest: {
-        url: 'https://pxy.real9.cn/www.gamer520.com/',
+        url: 'https://pxy3.real9.cn/www.gamer520.com/',
         title: 'Gamer520 - 最新资源',
         description: 'Switch520-Gamer520 最新游戏资源',
     },
     pcplay: {
-        url: 'https://pxy.real9.cn/www.gamer520.com/pcplay',
+        url: 'https://pxy3.real9.cn/www.gamer520.com/pcplay',
         title: 'Gamer520 - PC游戏',
         description: 'PC游戏资源 - Gamer520',
     },
     switch: {
-        url: 'https://pxy.real9.cn/www.gamer520.com/gameswitch',
+        url: 'https://pxy3.real9.cn/www.gamer520.com/gameswitch',
         title: 'Gamer520 - Switch游戏',
         description: 'Switch游戏资源 - Gamer520',
     },
     xgq: {
-        url: 'https://pxy.real9.cn/www.gamer520.com/xgq',
+        url: 'https://pxy3.real9.cn/www.gamer520.com/xgq',
         title: 'Gamer520 - PC修改器',
         description: 'PC修改器资源 - Gamer520',
     },
     '3a': {
-        url: 'https://pxy.real9.cn/www.gamer520.com/3ajuzuo',
+        url: 'https://pxy3.real9.cn/www.gamer520.com/3ajuzuo',
         title: 'Gamer520 - 3A巨作',
         description: '3A巨作资源 - Gamer520',
     },
     jinshouzhi: {
-        url: 'https://pxy.real9.cn/www.gamer520.com/jinshouzhi',
+        url: 'https://pxy3.real9.cn/www.gamer520.com/jinshouzhi',
         title: 'Gamer520 - 金手指',
         description: 'Switch金手指资源 - Gamer520',
     },
     zhuti: {
-        url: 'https://pxy.real9.cn/www.gamer520.com/zhuti',
+        url: 'https://pxy3.real9.cn/www.gamer520.com/zhuti',
         title: 'Gamer520 - Switch主题',
         description: 'Switch主题资源 - Gamer520',
     },
     zhangji: {
-        url: 'https://pxy.real9.cn/www.gamer520.com/zhangji',
+        url: 'https://pxy3.real9.cn/www.gamer520.com/zhangji',
         title: 'Gamer520 - 模拟器大全',
         description: '模拟器资源 - Gamer520',
     },
@@ -141,7 +141,7 @@ async function handler(ctx: any) {
     const category = ctx.req.param('category') || 'latest';
     const config = categoryMap[category] || categoryMap.latest;
 
-    // 通过 pxy.real9.cn 代理访问，绕过 gamer520.com 对海外/Vercel IP 的封锁
+    // 通过 pxy3.real9.cn 代理访问，绕过 gamer520.com 对 non-China IP 的 Cloudflare WAF 封锁
     const html = await ofetch(config.url, {
         parseResponse: (text) => text,
     });
